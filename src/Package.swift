@@ -5,6 +5,11 @@ import PackageDescription
 
 let package = Package(
     name: "Fluttershy",
+    products: [
+        .executable(name: "Fluttershy", targets: ["Fluttershy"]),
+        .library(name: "FlutterCore", targets: ["FlutterCore"]),
+        //.library(name: "LinearAlgebra", targets: ["LinearAlgebra"]),
+    ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
@@ -14,9 +19,16 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Fluttershy",
+            dependencies: ["FlutterCore", "LinearAlgebra"]),
+        .target(
+            name: "FlutterCore",
             dependencies: ["LinearAlgebra"]),
         .target(
             name: "LinearAlgebra",
             dependencies: []),
+        
+        .testTarget(
+            name: "FlutterCoreTests",
+            dependencies: ["FlutterCore", "LinearAlgebra"]),
     ]
 )
