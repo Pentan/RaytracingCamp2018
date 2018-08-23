@@ -16,7 +16,7 @@ public class CameraNode {
     public var fNumber:Double         = 0.0
     public var focusDistance:Double   = 1.0   // [m]
     
-    public init(_ p:Vector3) {
+    public init(_ p:Vector3=Vector3()) {
         position = p
         rayTransform = Matrix4()
     }
@@ -76,6 +76,10 @@ public class CameraNode {
             Matrix4.transformV3(rayTransform, eye),
             Matrix4.mulV3(rayTransform, d)
         )
+    }
+    
+    public func renderPreprocess(_ rng:Random) {
+        // TODO ?
     }
     
     // u,v : [-1,1]

@@ -19,4 +19,8 @@ public struct Ray {
         origin = o
         direction = d
     }
+    
+    public func pointAt(_ t:Double) -> Vector3 {
+        return direction * t + origin
+    }
 }

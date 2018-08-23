@@ -7,48 +7,68 @@ import Glibc
 import LinearAlgebra
 
 public class ObjectNode {
-    public var geometrys:[Sphere] = []
+    public var geometry:Geometry
     public var materials:[Material] = []
     
-    public init(_ geom:Sphere, _ mat:Material) {
-        geometrys.append(geom)
+    public var aabb = AABB()
+    
+    public var transform = Matrix4()
+    public var invTransform = Matrix4()
+    public var invTransTransform = Matrix4()
+    
+    public init(_ geom:Geometry) {
+        geometry = geom
+    }
+    
+    public init(_ geom:Geometry, _ mat:Material) {
+        geometry = geom
         materials.append(mat)
     }
     
+    @discardableResult
+    public func addMaterial(_ mat:Material) -> Int {
+        materials.append(mat)
+        return materials.count - 1
+    }
+    
+    internal func makeLocalRay(_ ray:Ray) -> (Ray, Double) {
+        let lorg = Matrix4.transformV3(invTransform, ray.origin)
+        let ldir = Matrix4.mulV3(invTransform, ray.direction)
+        let ldlen = ldir.length()
+        return (Ray(lorg, ldir / ldlen), ldlen)
+    }
+    
+    public func renderPreprocess(_ rng:Random) {
+        geometry.renderPreprocess(rng)
+        // Update AABB
+        aabb = geometry.transfomedAABB(transform)
+        
+        (invTransform, _) = Matrix4.inverted(transform)
+        invTransTransform = Matrix4.transposed(invTransform)
+    }
+    
     public func intersection(_ ray:Ray, _ near:Double, _ far:Double) -> Hit {
-        var min_hit = Hit(false, far)
-        var min_hitp = Vector3()
+        // Transform ray global to local
+        let (lray, lscale) = makeLocalRay(ray)
         
-        // TODO transform ray global to local
-        
-        for i in 0..<geometrys.count {
-            let (hitp, primId) = geometrys[i].intersection(ray, near, min_hit.distance)
-            if primId != Hit.kNoHitIndex {
-                min_hitp = hitp
-                min_hit.isHit = true
-                min_hit.primitiveIndex = primId
-                min_hit.geometryIndex = i
-            }
-        }
-        
-        if min_hit.isHit {
-            // TODO transform hit point local to global
-            min_hit.distance = (ray.origin - min_hitp).length()
-            
-            return min_hit
+        //
+        let (ishit, hitd, primId) = geometry.intersection(lray, near * lscale, far * lscale)
+        if ishit {
+            // Transform hit distance local to global
+            return Hit(true, hitd / lscale, primitiveIndex:primId)
         }
         
         return Hit(false)
     }
     
-    public func intersectionDetail(_ ray:Ray, _ hit:Hit) -> SurfaceSpec {
-        let geom = geometrys[hit.geometryIndex]
+    public func intersectionDetail(_ ray:Ray, _ hit:Hit, _ near:Double, _ far:Double) -> SurfaceSpec {
+        // Transform ray global to local
+        let (lray, _) = makeLocalRay(ray)
         
-        // TODO transform ray global to local
+        let surf = geometry.intersectionDetail(lray, hit.primitiveIndex, near, far)
         
-        let surf = geom.intersectionDetail(ray, hit)
-        
-        // TODO needs transform location and normals to local to global
+        // Transform location and normals local to global
+        surf.applyTransform(transform, invTransTransform)
         
         return surf
     }

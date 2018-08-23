@@ -107,7 +107,15 @@ print("Trace depth min:\(rndrconf.minDepth) max:\(rndrconf.maxDepth)(Max is not 
 // Setup scene
 let scene = Scene()
 // scene load ...
-// TODO
+
+//+++++
+//BuildCornelBoxScene(scene)
+BuildMeshCornelBoxScene(scene)
+//BuildTestScene01(scene)
+//+++++
+
+// Preprocess
+scene.renderPreprocess(Random(seed:UInt64(time(nil))))
 
 // override camera settings
 scene.camera.resizeSensorWithAspectRatio(rndrconf.aspect)
@@ -190,7 +198,8 @@ func pathtrace(_ nx:Double, _ ny:Double, _ scene:Scene, _ rng:Random) -> (Vector
         //+++++
         //radiance = Vector3(1.0, 1.0, 1.0)
         // normal
-        //radiance = pv.surface.geometryNormal * 0.5 + Vector3(0.5, 0.5, 0.5)
+//        radiance = pv.surface.geometryNormal * 0.5 + Vector3(0.5, 0.5, 0.5)
+//        break
         //radiance = mat.Kd
         //break
         //+++++
@@ -213,7 +222,7 @@ let dg = DispatchGroup()
 dq.async(group: dg) {
     
     let seedBase = UInt64(time(nil))
-
+    
     DispatchQueue.concurrentPerform(iterations: imageTiles.count) { (itile) in
     //for itile in 0..<tiles.count {
         let tile = imageTiles[itile]

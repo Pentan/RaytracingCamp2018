@@ -8,82 +8,77 @@ import LinearAlgebra
 
 public class Scene {
     public var objectNodes = Array<ObjectNode>()
-    public var camera:CameraNode
+    public var camera = CameraNode()
+    
+    internal let objectBVH = BVH()
     
     public init() {
-        //+++++
-        /*
-        camera = CameraNode(
-            position: Vector3(0.0, 0.0, 10.0),
-            look: Vector3(0.0, 0.0, 0.0),
-            up: Vector3(0.0, 1.0, 0.0)
-        )
+    }
+    
+    public func addObject(_ obj:ObjectNode) {
+        objectNodes.append(obj)
+    }
+    
+    public func renderPreprocess(_ rng:Random) {
+        // Camera
+        camera.renderPreprocess(rng)
         
-        objectNodes.append(
-            ObjectNode(
-                Sphere(Vector3(0.0, 0.0, 0.0), 1.0),
-                Material(
-                    Vector3(0.8, 0.2, 0.2),
-                    Vector3(0.0, 0.0, 0.0)
-                )
-            )
-        )
+        // Background
+        // TODO
         
-        objectNodes.append(
-            ObjectNode(
-                Sphere(Vector3(0.0, -100.0, 0.0), 99.0),
-                Material(
-                    Vector3(0.8, 0.8, 0.8),
-                    Vector3(0.0, 0.0, 0.0)
-                )
-            )
-        )
+        // BVH
+        objectBVH.clear()
         
-        objectNodes.append(
-            ObjectNode(
-                Sphere(Vector3(1.0, 1.0, 1.0), 0.4),
-                Material(
-                    Vector3(0.0, 0.0, 0.0),
-                    Vector3(2.0, 2.0, 2.0)
-                )
-            )
-        )
-        */
+        // Objects
+        for i in 0..<objectNodes.count {
+            let obj = objectNodes[i]
+            obj.renderPreprocess(rng)
+            
+            // Register BVH
+            objectBVH.appendLeaf(obj.aabb, i)
+        }
         
-        // Cornel box
-        camera = CameraNode(Vector3(50.0, 52.0, 295.6))
-        camera.lookAt(
-            look:Vector3(50.0, 52.0-0.042612, -1.0),
-            up:Vector3(0.0, 1.0, 0.0)
-        )
-        camera.setFoculLengthWithFOV(30.0 * Double.pi / 180.0)
+        // Lights
+        // TODO
         
-        objectNodes.append(ObjectNode(Sphere(Vector3( 1e5+1.0 , 40.8, 81.6),    1e5  ), Material(Vector3(0.75, 0.25, 0.25), Vector3(0.0, 0.0, 0.0), .kLambert)))
-        objectNodes.append(ObjectNode(Sphere(Vector3(-1e5+99.0, 40.8, 81.6),    1e5  ), Material(Vector3(0.25, 0.25, 0.75), Vector3(0.0, 0.0, 0.0), .kLambert)))
-        objectNodes.append(ObjectNode(Sphere(Vector3(50.0, 40.8, 1e5),          1e5  ), Material(Vector3(0.75, 0.75, 0.75), Vector3(0.0, 0.0, 0.0), .kLambert)))
-        objectNodes.append(ObjectNode(Sphere(Vector3(50.0, 1e5 , 81.6),         1e5  ), Material(Vector3(0.75, 0.75, 0.75), Vector3(0.0, 0.0, 0.0), .kLambert)))
-        objectNodes.append(ObjectNode(Sphere(Vector3(50.0, -1e5+81.6, 81.6),    1e5  ), Material(Vector3(0.75, 0.75, 0.75), Vector3(0.0, 0.0, 0.0), .kLambert)))
-        objectNodes.append(ObjectNode(Sphere(Vector3(27.0, 16.5, 47.0),         16.5 ), Material(Vector3(0.99, 0.99, 0.99), Vector3(0.0, 0.0, 0.0), .kPerfectSpecular)))
-        objectNodes.append(ObjectNode(Sphere(Vector3(73.0, 16.5, 78.0),         16.5 ), Material(Vector3(0.99, 0.99, 0.99), Vector3(0.0, 0.0, 0.0), .kFineGlass)))
-        objectNodes.append(ObjectNode(Sphere(Vector3(50.0, 681.6-0.27, 81.6),   600.0), Material(Vector3(0.0 , 0.0 , 0.0 ), Vector3(12.0, 12.0, 12.0), .kLambert)))
-        
-        //+++++
+        // BVH
+        let bvhdepth = objectBVH.buildTree()
+        print("object bvh max depth:\(bvhdepth)")
     }
     
     public func raytrace(_ ray:Ray, _ near:Double=0.0, _ far:Double=kFarAway) -> (Bool, PathVertex) {
         var min_hit = Hit(false, far)
         
-        for i in 0..<objectNodes.count {
-            let hit = objectNodes[i].intersection(ray, near, min_hit.distance)
+        // Blute force
+//        for i in 0..<objectNodes.count {
+//            let hit = objectNodes[i].intersection(ray, near, min_hit.distance)
+//            if hit.isHit {
+//                min_hit = hit
+//                min_hit.objectIndex = i
+//            }
+//        }
+//        let bfhit = min_hit
+        
+        // BVH
+        var tmphit = Hit(false, 0.0)
+        let (bvhhit, bvhd, oid) = objectBVH.intersect(ray, near, far) { (objId, ray, near, far) -> (Bool, Double) in
+            let hit = objectNodes[objId].intersection(ray, near, far)
             if hit.isHit {
-                min_hit = hit
-                min_hit.objectIndex = i
+                tmphit = hit
             }
+            return (hit.isHit, hit.distance)
         }
+        if bvhhit {
+            min_hit = tmphit
+            min_hit.distance = bvhd //++++++
+            min_hit.objectIndex = oid
+        }
+        
+//        assert(bfhit.primitiveIndex == min_hit.primitiveIndex)
         
         if min_hit.isHit {
             let obj = objectNodes[min_hit.objectIndex]
-            let surf = obj.intersectionDetail(ray, min_hit)
+            let surf = obj.intersectionDetail(ray, min_hit, near, far)
             let pv = PathVertex(-ray.direction, min_hit, surf)
             return (true, pv)
         }
