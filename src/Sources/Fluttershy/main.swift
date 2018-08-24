@@ -110,8 +110,8 @@ let scene = Scene()
 
 //+++++
 //BuildCornelBoxScene(scene)
-BuildMeshCornelBoxScene(scene)
-//BuildTestScene01(scene)
+//BuildMeshCornelBoxScene(scene)
+BuildTestScene01(scene)
 //+++++
 
 // Preprocess
@@ -144,10 +144,8 @@ func pathtrace(_ nx:Double, _ ny:Double, _ scene:Scene, _ rng:Random) -> (Vector
         let (ishit, pv) = scene.raytrace(ray, 1e-4, kFarAway)
         if !ishit {
             // sample env using ray direction
-            //+++++
-            let bg = Vector3(0.02, 0.02, 0.02)
-            radiance += Vector3.mul(throughput, bg)
-            //+++++
+            let bgcol = scene.background.sample(ray)
+            radiance += Vector3.mul(throughput, bgcol)
             break
         }
         
@@ -156,6 +154,7 @@ func pathtrace(_ nx:Double, _ ny:Double, _ scene:Scene, _ rng:Random) -> (Vector
         let mat = obj.materials[pv.surface.materialIndex]
         
         // and accumulate it with throughput
+        // if (not light) || depth < 1
         radiance += Vector3.mul(throughput, mat.Ke)
         
         // current point can do light sample?

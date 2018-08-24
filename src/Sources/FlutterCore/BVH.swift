@@ -100,37 +100,39 @@ public class BVH {
     }
     
     // intersection test returns (is intersect, distance)
-    public typealias intersectionTest = (_ dataId:Int, _ ray:Ray, _ near:Double, _ far:Double) -> (Bool, Double)
+    public typealias intersectionTest = (_ dataId:Int, _ ray:Ray, _ near:Double, _ far:Double) -> (Bool, Double, Int)
     
-    public func intersect(_ ray:Ray, _ near:Double, _ far:Double, _ leafIntersect:intersectionTest) -> (Bool, Double, Int) {
+    public func intersect(_ ray:Ray, _ near:Double, _ far:Double, _ leafIntersect:intersectionTest) -> (Bool, Double, Int, Int) {
         return intersectTree(tree, ray, near, far, leafIntersect)
     }
     
-    internal func intersectTree(_ node:Node, _ ray:Ray, _ near:Double, _ far:Double, _ leafIntersect:intersectionTest) -> (Bool, Double, Int) {
+    internal func intersectTree(_ node:Node, _ ray:Ray, _ near:Double, _ far:Double, _ leafIntersect:intersectionTest) -> (Bool, Double, Int, Int) {
         if node.isLeaf {
             // Leaf node
-            let (ishit, d) = leafIntersect(node.dataId, ray, near, far)
-            return (ishit, d, node.dataId)
+            let (ishit, d, leafData) = leafIntersect(node.dataId, ray, near, far)
+            return (ishit, d, node.dataId, leafData)
         } else {
             if node.bounds.isIntersect(ray, near, far) {
                 var minFar = far
-                var minId = -1
+                var minNodeId = -1
+                var minLeafData = -1
                 for i in 0..<node.children.count {
                     let child = node.children[i]
-                    let (ishit, d, nodeId) = intersectTree(child, ray, near, minFar, leafIntersect)
+                    let (ishit, d, nodeId, leafData) = intersectTree(child, ray, near, minFar, leafIntersect)
                     if ishit {
                         minFar = d
-                        minId = nodeId
+                        minNodeId = nodeId
+                        minLeafData = leafData
                     }
                 }
                 
                 if minFar < far {
-                    return (true, minFar, minId)
+                    return (true, minFar, minNodeId, minLeafData)
                 }
             }
         }
         
-        return (false, 0.0, -1)
+        return (false, 0.0, -1, -1)
     }
 }
 

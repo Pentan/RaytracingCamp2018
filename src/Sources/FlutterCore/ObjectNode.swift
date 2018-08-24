@@ -47,7 +47,7 @@ public class ObjectNode {
         invTransTransform = Matrix4.transposed(invTransform)
     }
     
-    public func intersection(_ ray:Ray, _ near:Double, _ far:Double) -> Hit {
+    public func intersection(_ ray:Ray, _ near:Double, _ far:Double) -> (Bool, Double, Int) {
         // Transform ray global to local
         let (lray, lscale) = makeLocalRay(ray)
         
@@ -55,10 +55,10 @@ public class ObjectNode {
         let (ishit, hitd, primId) = geometry.intersection(lray, near * lscale, far * lscale)
         if ishit {
             // Transform hit distance local to global
-            return Hit(true, hitd / lscale, primitiveIndex:primId)
+            return (true, hitd / lscale, primId)
         }
         
-        return Hit(false)
+        return (false, -1.0, -1)
     }
     
     public func intersectionDetail(_ ray:Ray, _ hit:Hit, _ near:Double, _ far:Double) -> SurfaceSpec {

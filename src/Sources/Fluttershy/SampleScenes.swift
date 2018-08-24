@@ -9,6 +9,7 @@ import FlutterCore
 
 // Cornel box
 public func BuildCornelBoxScene(_ scene:Scene) {
+    print("Build simple cornel box scene")
     let camera = scene.camera
     camera.position = Vector3(50.0, 52.0, 295.6)
     camera.lookAt(
@@ -16,6 +17,8 @@ public func BuildCornelBoxScene(_ scene:Scene) {
         up:Vector3(0.0, 1.0, 0.0)
     )
     camera.setFoculLengthWithFOV(30.0 * Double.pi / 180.0)
+    
+    scene.background.texture = ConstantColor(Vector3(0.02, 0.02, 0.02))
     
     scene.addObject(ObjectNode(Sphere(Vector3( 1e5+1.0 , 40.8, 81.6),    1e5  ), Material(Vector3(0.75, 0.25, 0.25), Vector3(0.0, 0.0, 0.0), .kLambert)))
     scene.addObject(ObjectNode(Sphere(Vector3(-1e5+99.0, 40.8, 81.6),    1e5  ), Material(Vector3(0.25, 0.25, 0.75), Vector3(0.0, 0.0, 0.0), .kLambert)))
@@ -29,6 +32,7 @@ public func BuildCornelBoxScene(_ scene:Scene) {
 
 // Cornel box 2
 public func BuildMeshCornelBoxScene(_ scene:Scene) {
+    print("Build mesh cornel box scene")
     let camera = scene.camera
     camera.position = Vector3(50.0, 52.0, 295.6)
     camera.lookAt(
@@ -36,6 +40,8 @@ public func BuildMeshCornelBoxScene(_ scene:Scene) {
         up:Vector3(0.0, 1.0, 0.0)
     )
     camera.setFoculLengthWithFOV(30.0 * Double.pi / 180.0)
+    
+    scene.background.texture = ConstantColor(Vector3(0.02, 0.02, 0.02))
     
     // Walls
     let wallgeom = Mesh(8, 6, 0)
@@ -105,7 +111,7 @@ public func BuildMeshCornelBoxScene(_ scene:Scene) {
     scene.addObject(mirrorobj)
     
     let glassobj = ObjectNode(cubegeom, Material(Vector3(0.99, 0.99, 0.99), Vector3(0.0, 0.0, 0.0), .kFineGlass))
-    glassobj.transform.setTranslation(73.0, 16.51, 78.0)
+    glassobj.transform.setTranslation(73.0, 16.5, 78.0)
     glassobj.transform.rotate(-25.0 * Double.pi / 180.0, Vector3(0.0, 1.0, 0.0))
     scene.addObject(glassobj)
 }
@@ -120,6 +126,12 @@ public func BuildTestScene01(_ scene:Scene) {
     )
     camera.setFoculLengthWithFOV(30.0 * Double.pi / 180.0)
     
+    scene.background.texture = LinearGradient(
+        Vector3(0.04, 0.02, 0.02),
+        Vector3(0.5, 0.5, 0.8),
+        direction:.kY
+    )
+    
     scene.addObject(
         ObjectNode(
             Cube(Vector3(0.0, 0.0, 0.0), Vector3(1.0, 1.0, 1.0)),
@@ -130,5 +142,12 @@ public func BuildTestScene01(_ scene:Scene) {
         ObjectNode(
             Sphere(Vector3(1.0, 1.0, -1.0), 0.5),
             Material(Vector3(0.75, 0.75, 0.75), Vector3(4.0, 4.0, 4.0), .kLambert))
+    )
+    
+    scene.addObject(
+        ObjectNode(
+            Cube(Vector3(0.0, -1.0, 0.0), Vector3(10.0, 0.2, 10.0)),
+            Material(Vector3(0.25, 0.25, 0.5), Vector3(0.0, 0.0, 0.0), .kLambert)
+        )
     )
 }

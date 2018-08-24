@@ -7,8 +7,12 @@ import Glibc
 import LinearAlgebra
 
 public class Scene {
-    public var objectNodes = Array<ObjectNode>()
+    
     public var camera = CameraNode()
+    public var background = Background()
+    
+    public var objectNodes = Array<ObjectNode>()
+    public var lightNodes = Array<ObjectNode>()
     
     internal let objectBVH = BVH()
     
@@ -47,9 +51,8 @@ public class Scene {
     }
     
     public func raytrace(_ ray:Ray, _ near:Double=0.0, _ far:Double=kFarAway) -> (Bool, PathVertex) {
-        var min_hit = Hit(false, far)
-        
         // Blute force
+//        var min_hit = Hit(false, far)
 //        for i in 0..<objectNodes.count {
 //            let hit = objectNodes[i].intersection(ray, near, min_hit.distance)
 //            if hit.isHit {
@@ -57,31 +60,29 @@ public class Scene {
 //                min_hit.objectIndex = i
 //            }
 //        }
-//        let bfhit = min_hit
+//
+//        if min_hit.isHit {
+//            let obj = objectNodes[min_hit.objectIndex]
+//            let surf = obj.intersectionDetail(ray, min_hit, near, far)
+//            let pv = PathVertex(-ray.direction, min_hit, surf)
+//            return (true, pv)
+//        }
         
         // BVH
-        var tmphit = Hit(false, 0.0)
-        let (bvhhit, bvhd, oid) = objectBVH.intersect(ray, near, far) { (objId, ray, near, far) -> (Bool, Double) in
-            let hit = objectNodes[objId].intersection(ray, near, far)
-            if hit.isHit {
-                tmphit = hit
-            }
-            return (hit.isHit, hit.distance)
+        let (ishit, dist, objId, primId) = objectBVH.intersect(ray, near, far) { (objId, ray, near, far) -> (Bool, Double, Int) in
+            return objectNodes[objId].intersection(ray, near, far)
         }
-        if bvhhit {
-            min_hit = tmphit
-            min_hit.distance = bvhd //++++++
-            min_hit.objectIndex = oid
+        
+        if ishit {
+            let hit = Hit(true, dist, objectIndex:objId, primitiveIndex:primId)
+            let obj = objectNodes[objId]
+            let surf = obj.intersectionDetail(ray, hit, near, far)
+            let pv = PathVertex(-ray.direction, hit, surf)
+            return (true, pv)
         }
         
 //        assert(bfhit.primitiveIndex == min_hit.primitiveIndex)
         
-        if min_hit.isHit {
-            let obj = objectNodes[min_hit.objectIndex]
-            let surf = obj.intersectionDetail(ray, min_hit, near, far)
-            let pv = PathVertex(-ray.direction, min_hit, surf)
-            return (true, pv)
-        }
         
         return (false, PathVertex.kEmptyVertex)
     }

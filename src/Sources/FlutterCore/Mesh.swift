@@ -209,10 +209,10 @@ public class Mesh : Geometry {
 //        }
         
         // BVH
-        let (isHit, minD, hitId) = faceBVH.intersect(ray, near, far) { (faceId, ray, near, far) -> (Bool, Double) in
+        let (isHit, minD, hitId, _) = faceBVH.intersect(ray, near, far) { (faceId, ray, near, far) -> (Bool, Double, Int) in
             let tri = faces[faceId]
             let (ishit, d, _, _) = tri.intersection(ray, near, far)
-            return (ishit, d)
+            return (ishit, d, 0) // leafData is don't mind
         }
         
         //
