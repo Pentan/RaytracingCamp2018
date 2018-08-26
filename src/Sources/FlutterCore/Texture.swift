@@ -49,6 +49,12 @@ public class LinearGradient : Texture {
 }
 
 /////
+/* buffer coordinate
+  [0]+---+[w-1]
+     |   |
+     +---+ [w*h*N-1]
+ uv(0,0)
+ */
 public class BufferTexture : Texture {
     public var width:Int
     public var height:Int
@@ -138,7 +144,7 @@ public class BufferTexture : Texture {
     public func sample(_ uv: Vector3) -> Vector3 {
         // Bilinear
         let (x0, x1, xt) = wrapU(uv.x * Double(width) - 0.5, width)
-        let (y0, y1, yt) = wrapV(uv.y * Double(height) - 0.5, height)
+        let (y0, y1, yt) = wrapV((1.0 - uv.y) * Double(height) - 0.5, height)
         
         let i00 = (x0 + y0 * width) * stride
         let i01 = (x0 + y1 * width) * stride
@@ -157,10 +163,10 @@ public class BufferTexture : Texture {
     }
     
     // Sample one component
-    public func sample(_ comp:Int, _ uv: Vector3) -> Double {
+    public func sample(_ uv: Vector3, comp:Int) -> Double {
         // Bilinear
         let (x0, x1, xt) = wrapU(uv.x * Double(width) - 0.5, width)
-        let (y0, y1, yt) = wrapV(uv.y * Double(height) - 0.5, height)
+        let (y0, y1, yt) = wrapV((1.0 - uv.y) * Double(height) - 0.5, height)
         
         let i00 = (x0 + y0 * width) * stride
         let i01 = (x0 + y1 * width) * stride

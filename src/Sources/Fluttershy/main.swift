@@ -17,7 +17,7 @@ public func getTimeInSeconds() -> Double {
 }
 
 // Render settings
-struct RenderConfig {
+class RenderConfig {
     public var width    = 320
     public var height   = 240
     public var aspect:Double {
@@ -35,7 +35,7 @@ struct RenderConfig {
     
     public var outputImage = "output.ppm"
     
-    public mutating func parseCommandlineOptions() {
+    public func parseCommandlineOptions() {
         var i = 1
         while i < CommandLine.argc {
             let arg:String = CommandLine.arguments[i]
@@ -110,8 +110,8 @@ let scene = Scene()
 
 //+++++
 //BuildCornelBoxScene(scene)
-//BuildMeshCornelBoxScene(scene)
-BuildTestScene01(scene)
+BuildMeshCornelBoxScene(scene)
+//BuildTestScene01(scene)
 //+++++
 
 // Preprocess
@@ -130,82 +130,9 @@ for _ in 0..<(rndrconf.width * rndrconf.height) {
 }
 
 //
-func pathtrace(_ nx:Double, _ ny:Double, _ scene:Scene, _ rng:Random) -> (Vector3, Int) {
-    // Start ray tracing
-    //var ray = scene.camera.ray(u: nx, v: ny, fov: kFOV, aspect: kAspect)
-    var ray = scene.camera.ray(nx, ny, rng)
-    
-    var throughput = Vector3(1.0, 1.0, 1.0)
-    var radiance = Vector3(0.0, 0.0, 0.0)
-    
-    var depth = 0
-    while true {
-        // Get next intersection point
-        let (ishit, pv) = scene.raytrace(ray, 1e-4, kFarAway)
-        if !ishit {
-            // sample env using ray direction
-            let bgcol = scene.background.sample(ray)
-            radiance += Vector3.mul(throughput, bgcol)
-            break
-        }
-        
-        // get radiance from next intersection point
-        let obj = scene.objectNodes[pv.hit.objectIndex]
-        let mat = obj.materials[pv.surface.materialIndex]
-        
-        // and accumulate it with throughput
-        // if (not light) || depth < 1
-        radiance += Vector3.mul(throughput, mat.Ke)
-        
-        // current point can do light sample?
-        if depth > 0 {
-            // do light sample
-        }
-        
-        // update from next material infomation
-        
-        // Sample next direction
-        //let normal = (Vector3.dot(-ray.direction, pv.surface.shadingNormal) > 0.0) ? pv.surface.shadingNormal : -pv.surface.shadingNormal
-        let (nxtRay, rayPdf, bsdfId) = mat.sampleNext(pv, rng)
-        
-        // throughput
-        let ndotl = Vector3.dot(pv.surface.shadingNormal, nxtRay.direction)
-        let (bsdf, bsdfPdf) = mat.bsdf(bsdfId, pv, nxtRay)
-        throughput = Vector3.mul(throughput, mat.Kd * bsdf * abs(ndotl) / (rayPdf * bsdfPdf))
-        
-        // new ray
-        ray = nxtRay
-        
-        // Russian roulette
-        if depth > rndrconf.minDepth {
-            //let c = throughput.maxMagnitude()
-            let c = (throughput.x + throughput.y + throughput.z) / 3.0
-            let q = max(rndrconf.minRRCutOff, 1.0 - c)
-            if rng.nextDoubleCO() < q {
-                break
-            }
-            throughput = throughput / (1.0 - q)
-        }
-        
-        // Update depth
-        depth += 1
-//        if depth > kMaxDepth {
-//            // Biased Kill!
-//            break
-//        }
-        
-        //+++++
-        //radiance = Vector3(1.0, 1.0, 1.0)
-        // normal
-//        radiance = pv.surface.geometryNormal * 0.5 + Vector3(0.5, 0.5, 0.5)
-//        break
-        //radiance = mat.Kd
-        //break
-        //+++++
-    }
-    
-    return (radiance, depth)
-}
+let render = PathTracer()
+render.minDepth = rndrconf.minDepth
+render.minRRCutOff = rndrconf.minRRCutOff
 
 // Image buckets array
 let imageTiles = ImageFragments.makeTileArray(rndrconf.width, rndrconf.height, rndrconf.tileSize, rndrconf.tileSize)
@@ -247,7 +174,7 @@ dq.async(group: dg) {
                         let nx = sx / Double(rndrconf.width) * 2.0 - 1.0
                         let ny = sy / Double(rndrconf.height) * 2.0 - 1.0
                         
-                        let (radiance, depth) = pathtrace(nx, ny, scene, rng)
+                        let (radiance, depth) = render.pathtrace(nx, ny, scene, rng)
                         
                         // Depth info
                         if depth > 0 {

@@ -75,7 +75,7 @@ final class TextureTests: XCTestCase {
             0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0, 0.0, 1.0
         ]
-        let tex = BufferTexture(2, 2, buf)
+        let tex = BufferTexture(2, 2, 3, buf)
         
         var c:Vector3
         

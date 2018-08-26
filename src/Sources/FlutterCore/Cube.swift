@@ -19,59 +19,50 @@ public class Cube : Geometry {
         let maxp = p + s * 0.5
         aabb = AABB(min: minp, max: maxp)
         
-        var i0 = 0
-        var i1 = 0
-        var i2 = 0
-        var i3 = 0
+        // Vertex
+        // Bottom
+        mesh.addVertex(Vector3(minp.x, minp.y, minp.z)) // 0
+        mesh.addVertex(Vector3(minp.x, minp.y, maxp.z)) // 1
+        mesh.addVertex(Vector3(maxp.x, minp.y, maxp.z)) // 2
+        mesh.addVertex(Vector3(maxp.x, minp.y, minp.z)) // 3
+        // Top
+        mesh.addVertex(Vector3(minp.x, maxp.y, minp.z)) // 4
+        mesh.addVertex(Vector3(minp.x, maxp.y, maxp.z)) // 5
+        mesh.addVertex(Vector3(maxp.x, maxp.y, maxp.z)) // 6
+        mesh.addVertex(Vector3(maxp.x, maxp.y, minp.z)) // 7
         
-        // front
-        i0 = mesh.addVertexAndNormal(Vector3(maxp.x, maxp.y, maxp.z), Vector3(0.0, 0.0, 1.0))
-        i1 = mesh.addVertexAndNormal(Vector3(minp.x, maxp.y, maxp.z), Vector3(0.0, 0.0, 1.0))
-        i2 = mesh.addVertexAndNormal(Vector3(minp.x, minp.y, maxp.z), Vector3(0.0, 0.0, 1.0))
-        i3 = mesh.addVertexAndNormal(Vector3(maxp.x, minp.y, maxp.z), Vector3(0.0, 0.0, 1.0))
-        mesh.addFace(i0, i1, i2)
-        mesh.addFace(i2, i3, i0)
+        // Normal
+        mesh.addNormal(Vector3( 1.0, 0.0, 0.0)) // 0
+        mesh.addNormal(Vector3(-1.0, 0.0, 0.0)) // 1
+        mesh.addNormal(Vector3(0.0,  1.0, 0.0)) // 2
+        mesh.addNormal(Vector3(0.0, -1.0, 0.0)) // 3
+        mesh.addNormal(Vector3(0.0, 0.0,  1.0)) // 4
+        mesh.addNormal(Vector3(0.0, 0.0, -1.0)) // 5
         
-        // back
-        i0 = mesh.addVertexAndNormal(Vector3(minp.x, maxp.y, minp.z), Vector3(0.0, 0.0, -1.0))
-        i1 = mesh.addVertexAndNormal(Vector3(maxp.x, maxp.y, minp.z), Vector3(0.0, 0.0, -1.0))
-        i2 = mesh.addVertexAndNormal(Vector3(maxp.x, minp.y, minp.z), Vector3(0.0, 0.0, -1.0))
-        i3 = mesh.addVertexAndNormal(Vector3(minp.x, minp.y, minp.z), Vector3(0.0, 0.0, -1.0))
-        mesh.addFace(i0, i1, i2)
-        mesh.addFace(i2, i3, i0)
-
-        // right
-        i0 = mesh.addVertexAndNormal(Vector3(maxp.x, maxp.y, minp.z), Vector3(1.0, 0.0, 0.0))
-        i1 = mesh.addVertexAndNormal(Vector3(maxp.x, maxp.y, maxp.z), Vector3(1.0, 0.0, 0.0))
-        i2 = mesh.addVertexAndNormal(Vector3(maxp.x, minp.y, maxp.z), Vector3(1.0, 0.0, 0.0))
-        i3 = mesh.addVertexAndNormal(Vector3(maxp.x, minp.y, minp.z), Vector3(1.0, 0.0, 0.0))
-        mesh.addFace(i0, i1, i2)
-        mesh.addFace(i2, i3, i0)
-
-        // left
-        i0 = mesh.addVertexAndNormal(Vector3(minp.x, maxp.y, maxp.z), Vector3(-1.0, 0.0, 0.0))
-        i1 = mesh.addVertexAndNormal(Vector3(minp.x, maxp.y, minp.z), Vector3(-1.0, 0.0, 0.0))
-        i2 = mesh.addVertexAndNormal(Vector3(minp.x, minp.y, minp.z), Vector3(-1.0, 0.0, 0.0))
-        i3 = mesh.addVertexAndNormal(Vector3(minp.x, minp.y, maxp.z), Vector3(-1.0, 0.0, 0.0))
-        mesh.addFace(i0, i1, i2)
-        mesh.addFace(i2, i3, i0)
-
-        // top
-        i0 = mesh.addVertexAndNormal(Vector3(maxp.x, maxp.y, minp.z), Vector3(0.0, 1.0, 0.0))
-        i1 = mesh.addVertexAndNormal(Vector3(minp.x, maxp.y, minp.z), Vector3(0.0, 1.0, 0.0))
-        i2 = mesh.addVertexAndNormal(Vector3(minp.x, maxp.y, maxp.z), Vector3(0.0, 1.0, 0.0))
-        i3 = mesh.addVertexAndNormal(Vector3(maxp.x, maxp.y, maxp.z), Vector3(0.0, 1.0, 0.0))
-        mesh.addFace(i0, i1, i2)
-        mesh.addFace(i2, i3, i0)
-
-        // bottom
-        i0 = mesh.addVertexAndNormal(Vector3(maxp.x, minp.y, maxp.z), Vector3(0.0, -1.0, 0.0))
-        i1 = mesh.addVertexAndNormal(Vector3(minp.x, minp.y, maxp.z), Vector3(0.0, -1.0, 0.0))
-        i2 = mesh.addVertexAndNormal(Vector3(minp.x, minp.y, minp.z), Vector3(0.0, -1.0, 0.0))
-        i3 = mesh.addVertexAndNormal(Vector3(maxp.x, minp.y, minp.z), Vector3(0.0, -1.0, 0.0))
-        mesh.addFace(i0, i1, i2)
-        mesh.addFace(i2, i3, i0)
+        // Texcoord
+        mesh.addTexCoord(Vector3(0.0, 0.0, 0.0))
+        mesh.addTexCoord(Vector3(1.0, 0.0, 0.0))
+        mesh.addTexCoord(Vector3(1.0, 1.0, 0.0))
+        mesh.addTexCoord(Vector3(0.0, 1.0, 0.0))
         
+        // Right
+        mesh.addFace(Mesh.FaceIndice(6, 2, 3), Mesh.FaceIndice(0, 0, 0), Mesh.FaceIndice(0, 1, 2))
+        mesh.addFace(Mesh.FaceIndice(3, 7, 6), Mesh.FaceIndice(0, 0, 0), Mesh.FaceIndice(2, 3, 0))
+        // Left
+        mesh.addFace(Mesh.FaceIndice(4, 0, 1), Mesh.FaceIndice(1, 1, 1), Mesh.FaceIndice(0, 1, 2))
+        mesh.addFace(Mesh.FaceIndice(1, 5, 4), Mesh.FaceIndice(1, 1, 1), Mesh.FaceIndice(2, 3, 0))
+        // Top
+        mesh.addFace(Mesh.FaceIndice(4, 5, 6), Mesh.FaceIndice(2, 2, 2), Mesh.FaceIndice(0, 1, 2))
+        mesh.addFace(Mesh.FaceIndice(6, 7, 4), Mesh.FaceIndice(2, 2, 2), Mesh.FaceIndice(2, 3, 0))
+        // Bottom
+        mesh.addFace(Mesh.FaceIndice(2, 1, 0), Mesh.FaceIndice(3, 3, 3), Mesh.FaceIndice(0, 1, 2))
+        mesh.addFace(Mesh.FaceIndice(0, 3, 2), Mesh.FaceIndice(3, 3, 3), Mesh.FaceIndice(2, 3, 0))
+        // Front
+        mesh.addFace(Mesh.FaceIndice(1, 2, 6), Mesh.FaceIndice(4, 4, 4), Mesh.FaceIndice(0, 1, 2))
+        mesh.addFace(Mesh.FaceIndice(6, 5, 1), Mesh.FaceIndice(4, 4, 4), Mesh.FaceIndice(2, 3, 0))
+        // Back
+        mesh.addFace(Mesh.FaceIndice(3, 0, 4), Mesh.FaceIndice(5, 5, 5), Mesh.FaceIndice(0, 1, 2))
+        mesh.addFace(Mesh.FaceIndice(4, 7, 3), Mesh.FaceIndice(5, 5, 5), Mesh.FaceIndice(2, 3, 0))
     }
     
     public func transfomedAABB(_ transform:Matrix4) -> AABB {
