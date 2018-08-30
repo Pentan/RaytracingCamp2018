@@ -29,6 +29,6 @@ public class Pixel {
             return (color.x / sc, color.y / sc, color.z / sc)
         }
         return (0.0, 0.0, 0.0)
-//        return (1.0, 0.0, 0.0)
+//        return (0.0, 0.0, 1.0)
     }
 }

@@ -89,6 +89,8 @@ public class SceneBuilder {
                 }
             }
             
+            // Scene extra settings
+            extractBackgroundExtras(scene)
         }
         
         internal func buildTextureBank() {
@@ -615,6 +617,26 @@ public class SceneBuilder {
             return retptr
         }
         
+        internal func extractBackgroundExtras(_ scn:Scene) {
+            guard let gltfscn = gltf.scenes?[gltf.scene] else {
+                return
+            }
+            guard let extras = gltfscn.extras as? [String: Any] else {
+                return
+            }
+            guard let bg = extras["background"] as? [String: Any] else {
+                return
+            }
+            
+            if let color = bg["color"] as? [Double] {
+                let tex = ConstantColor(Vector3(color[0], color[1], color[2]))
+                scn.background.texture = tex
+            }
+            if let grad = bg["gradient"] as? [Double] {
+                let tex = BufferTexture(1, grad.count / 3, 3, grad)
+                scn.background.texture = tex
+            }
+        }
         
     }
 }

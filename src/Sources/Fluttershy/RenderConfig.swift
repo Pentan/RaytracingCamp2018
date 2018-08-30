@@ -22,6 +22,7 @@ public class RenderConfig {
     public var minRRCutOff = 0.005
     
     public var tileSize = 64
+    public var scrambleTile = true
     
     public var timeLimit = 121.0
     public var progressInterval = 15.0
@@ -85,10 +86,18 @@ public class RenderConfig {
             } else if arg == "-ts" {
                 tileSize = Int(options[i + 1])!
                 i += 1
+            } else if arg == "-st" {
+                let flg = Int(options[i + 1])!
+                scrambleTile = (flg != 0)
+                i += 1
             } else if arg == "-q" {
-                quietProgress = true
+                let flg = Int(options[i + 1])!
+                quietProgress = (flg != 0)
+                i += 1
             } else if arg == "-w" {
-                waitToFinish = true
+                let flg = Int(options[i + 1])!
+                waitToFinish = (flg != 0)
+                i += 1
             } else if arg == "-i" {
                 inputFile = options[i + 1]
                 i += 1
@@ -109,8 +118,9 @@ public class RenderConfig {
         print(" -mind N : min depth")
         print(" -maxd N : max depth")
         print(" -ts N : tile size")
-        print(" -q : no progress image output")
-        print(" -w : wait to finish")
+        print(" -st (0 or 1): scrambled tile. off(0)/on(1)")
+        print(" -q (0 or 1): quiet mode (without progress image output). off(0)/on(1)")
+        print(" -w (0 or 1): wait to finish. off(0)/on(1)")
         print(" -i String : input file glTF")
         print(" -o String : output file name. If given empty string, not save file.")
     }

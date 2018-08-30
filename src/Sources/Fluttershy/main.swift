@@ -30,6 +30,8 @@ public func getTimeInSeconds() -> Double {
 print("=== Fluttershy ===")
 let startTime = getTimeInSeconds()
 
+let iniRng = Random(seed:UInt64(startTime * 1000.0))
+
 // Render settings
 var rndrconf = RenderConfig()
 rndrconf.loadOptionFile("data/options.json")
@@ -66,18 +68,20 @@ print("Trace depth min:\(rndrconf.minDepth) max:\(rndrconf.maxDepth)(Max is not 
 //+++++
 
 // scene load ...
-//let sceneFilePath = "/Users/satoru/Documents/_Working/GitRepos/RaytracingCamp2018/local_datas/Model/Blender/export/test02.gltf"
+//let sceneFilePath = "test02.gltf"
+//let sceneFilePath = "data/test04.gltf"
 //guard let scene = SceneBuilder.sceneFromGLTF(sceneFilePath) else {
 //    print("Scene load failure")
 //    exit(0)
 //}
+//rndrconf.waitToFinish = true
 
 let scene:Scene
 if rndrconf.inputFile.isEmpty {
     print("No input file. render default scene.")
     scene = Scene()
     BuildMeshCornelBoxScene(scene)
-    
+
 } else {
     guard let scn = SceneBuilder.sceneFromGLTF(rndrconf.inputFile) else {
         print("Scene load failure")
@@ -87,7 +91,7 @@ if rndrconf.inputFile.isEmpty {
 }
 
 // Preprocess
-scene.renderPreprocess(Random(seed:UInt64(time(nil))))
+scene.renderPreprocess(iniRng)
 
 // override camera settings
 if abs(rndrconf.aspect - scene.camera.sensorAspectRatio) > 1e-6 {
@@ -101,7 +105,7 @@ if abs(rndrconf.aspect - scene.camera.sensorAspectRatio) > 1e-6 {
     print("camera focul length:\(scene.camera.foculLength)")
 }
 
-//
+// Image Buffer
 func makePixelArray(_ len:Int) -> [Pixel] {
     var ary = Array<Pixel>()
     ary.reserveCapacity(len)
@@ -130,14 +134,21 @@ func saveImage(_ path:String) {
     ImageWriter.writeBMP(filepath: path, width: w, height: h, data: snapshot, gamma: 2.2)
 }
 
-//
+// Renderer
 let render = PathTracer()
 render.minDepth = rndrconf.minDepth
 render.minRRCutOff = rndrconf.minRRCutOff
 
 // Image buckets array
-let imageTiles = ImageFragments.makeTileArray(rndrconf.width, rndrconf.height, rndrconf.tileSize, rndrconf.tileSize)
-print("Tiles:\(imageTiles.count)")
+let imageTiles:[ImageFragments]
+if rndrconf.scrambleTile {
+    print("Scrambled tile")
+    imageTiles = ImageFragments.makeScranbledArray(rndrconf.width, rndrconf.height, rndrconf.tileSize, rndrconf.tileSize, iniRng)
+} else {
+    print("Standard tile")
+    imageTiles = ImageFragments.makeTileArray(rndrconf.width, rndrconf.height, rndrconf.tileSize, rndrconf.tileSize)
+}
+print("Tiles:\(imageTiles.count), size:\(rndrconf.tileSize)")
 
 // Render
 print("Setup done: \(getTimeInSeconds() - startTime) [sec]")
