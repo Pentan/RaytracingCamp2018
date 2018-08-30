@@ -23,7 +23,7 @@ public class RenderConfig {
     
     public var tileSize = 64
     
-    public var timeLimit = 120.0
+    public var timeLimit = 121.0
     public var progressInterval = 15.0
     
     public var quietProgress = false
