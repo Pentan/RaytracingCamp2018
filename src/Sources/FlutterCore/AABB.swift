@@ -18,9 +18,7 @@ public class AABB {
     public init() {
         let gfm = Double.greatestFiniteMagnitude
         min = Vector3(gfm, gfm, gfm)
-        max = Vector3(-gfm, -gfm, gfm)
-//        centroid = Vector3(0.0, 0.0, 0.0)
-//        dataId = 0
+        max = Vector3(-gfm, -gfm, -gfm)
     }
     
     public init(min:Vector3, max:Vector3) {
@@ -104,7 +102,7 @@ public class AABB {
                 swap(&tmin, &tmax)
             }
             
-            largest_min = Double.minimum(largest_min, tmin)
+            largest_min = Double.maximum(largest_min, tmin)
             smallest_max = Double.minimum(smallest_max, tmax)
             
             if smallest_max < largest_min {

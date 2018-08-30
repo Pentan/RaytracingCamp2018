@@ -7,7 +7,7 @@ import Glibc
 import LinearAlgebra
 
 public class CameraNode {
-    public var position:Vector3
+    public var transform:Matrix4
     public var rayTransform:Matrix4
     
     public var sensorWidth:Double     = 36.0  // [mm]
@@ -16,20 +16,28 @@ public class CameraNode {
     public var fNumber:Double         = 0.0
     public var focusDistance:Double   = 1.0   // [m]
     
-    public init(_ p:Vector3=Vector3()) {
-        position = p
+    public var sensorAspectRatio:Double {
+        return sensorWidth / sensorHeight
+    }
+    
+    public init() {
+        transform = Matrix4()
         rayTransform = Matrix4()
     }
     
     public init(position:Vector3, look:Vector3, up:Vector3=Vector3(0.0, 1.0, 0.0)) {
-        self.position = position
+        transform = Matrix4()
         rayTransform = Matrix4()
-        lookAt(look:look, up:up)
+        lookAt(eye:position, look:look, up:up)
     }
     
-    public func lookAt(look:Vector3, up:Vector3=Vector3(0.0, 1.0, 0.0)) {
-        rayTransform = Matrix4.makeLookAt(position, look, up)
-        _ = rayTransform.invert()
+    public func lookAt(eye:Vector3, look:Vector3, up:Vector3=Vector3(0.0, 1.0, 0.0)) {
+        transform = Matrix4.makeLookAt(eye, look, up)
+        _ = transform.invert()
+    }
+    
+    public func setTransform(_ m:Matrix4) {
+        transform = m
     }
     
     public func setSensorSize(width:Double, height:Double) {
@@ -64,22 +72,23 @@ public class CameraNode {
         focusDistance = fd
     }
     
-    public func ray(u:Double, v:Double, fov:Double, aspect:Double) -> Ray {
-        // u,v expects [-1,1]
-        // fov is vertical angle [rad]
-        // aspect is w/h
-        let z = -1.0 / tan(fov * 0.5)
-        let d = Vector3.normalized(Vector3(u * aspect, v, z))
-        let eye = Vector3(0.0, 0.0, 0.0)
-        
-        return Ray(
-            Matrix4.transformV3(rayTransform, eye),
-            Matrix4.mulV3(rayTransform, d)
-        )
-    }
+//    public func ray(u:Double, v:Double, fov:Double, aspect:Double) -> Ray {
+//        // u,v expects [-1,1]
+//        // fov is vertical angle [rad]
+//        // aspect is w/h
+//        let z = -1.0 / tan(fov * 0.5)
+//        let d = Vector3.normalized(Vector3(u * aspect, v, z))
+//        let eye = Vector3(0.0, 0.0, 0.0)
+//
+//        return Ray(
+//            Matrix4.transformV3(rayTransform, eye),
+//            Matrix4.mulV3(rayTransform, d)
+//        )
+//    }
     
     public func renderPreprocess(_ rng:Random) {
-        // TODO ?
+//        rayTransform = Matrix4.inverted(transform).result
+        rayTransform = transform
     }
     
     // u,v : [-1,1]

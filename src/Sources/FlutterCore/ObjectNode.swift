@@ -9,6 +9,7 @@ import LinearAlgebra
 public class ObjectNode {
     public var geometry:Geometry
     public var materials:[Material] = []
+    public var isLight:Bool
     
     public var aabb = AABB()
     
@@ -16,13 +17,15 @@ public class ObjectNode {
     public var invTransform = Matrix4()
     public var invTransTransform = Matrix4()
     
-    public init(_ geom:Geometry) {
+    public init(_ geom:Geometry, _ isL:Bool=false) {
         geometry = geom
+        isLight = isL
     }
     
-    public init(_ geom:Geometry, _ mat:Material) {
+    public init(_ geom:Geometry, _ mat:Material, _ isL:Bool=false) {
         geometry = geom
         materials.append(mat)
+        isLight = isL
     }
     
     @discardableResult

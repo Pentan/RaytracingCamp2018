@@ -21,7 +21,7 @@ public class PathTracer {
         
         var throughput = Vector3(1.0, 1.0, 1.0)
         var radiance = Vector3(0.0, 0.0, 0.0)
-        var specularBounce = false
+        var fromSpecular = false
         
         var depth = 0
         while true {
@@ -47,8 +47,11 @@ public class PathTracer {
                 // do light sample
             }
             
-            // update from next material infomation
+            // normal
+//            radiance = pv.surface.geometryNormal * 0.5 + Vector3(0.5, 0.5, 0.5)
+//            break
             
+            // Update from next material infomation
             // Sample next direction
             let (nxtRay, fr, pdf, bsdfId) = mat.sampleNext(pv, rng)
             
@@ -57,7 +60,7 @@ public class PathTracer {
             throughput = Vector3.mul(throughput, fr * abs(ndotl) / pdf)
             
             // Update specular bounce flag
-            specularBounce = mat.isSpecularBSDF(bsdfId)
+            fromSpecular = mat.isSpecularBSDF(bsdfId)
             
             // Update ray
             ray = nxtRay
@@ -83,8 +86,8 @@ public class PathTracer {
             //+++++
             //radiance = Vector3(1.0, 1.0, 1.0)
             // normal
-//        radiance = pv.surface.geometryNormal * 0.5 + Vector3(0.5, 0.5, 0.5)
-//        break
+//            radiance = pv.surface.geometryNormal * 0.5 + Vector3(0.5, 0.5, 0.5)
+//            break
             //radiance = mat.Kd
             //break
             //+++++

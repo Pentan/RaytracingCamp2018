@@ -9,18 +9,30 @@ import LinearAlgebra
 /////
 public protocol Texture {
     func sample(_ uv:Vector3) -> Vector3
+    func sample(_ uv:Vector3, _ comp:Int) -> Double
 }
 
 /////
 public class ConstantColor : Texture {
     public var color:Vector3
+    public var alpha:Double
     
     public init(_ col:Vector3) {
         color = col
+        alpha = 1.0
+    }
+    
+    public init(_ col:Vector3, _ a:Double) {
+        color = col
+        alpha = a
     }
     
     public func sample(_ uv: Vector3) -> Vector3 {
         return color
+    }
+    
+    public func sample(_ uv:Vector3, _ comp:Int) -> Double {
+        return (comp > 2) ? alpha : color.componentAt(comp)
     }
 }
 
@@ -34,11 +46,23 @@ public class LinearGradient : Texture {
     
     public var color0:Vector3
     public var color1:Vector3
+    public var alpha0:Double
+    public var alpha1:Double
     internal var dirComp:Int
     
     public init(_ col0:Vector3, _ col1:Vector3, direction:Direction = .kX) {
         color0 = col0
         color1 = col1
+        alpha0 = 1.0
+        alpha1 = 1.0
+        dirComp = direction.rawValue
+    }
+    
+    public init(_ col0:Vector3, _ a0:Double, _ col1:Vector3, _ a1:Double, direction:Direction = .kX) {
+        color0 = col0
+        color1 = col1
+        alpha0 = a0
+        alpha1 = a1
         dirComp = direction.rawValue
     }
     
@@ -46,13 +70,22 @@ public class LinearGradient : Texture {
         let t = max(min(uv.componentAt(dirComp), 1.0), -1.0)
         return color0 * (1.0 - t) + color1 * t
     }
+    
+    public func sample(_ uv:Vector3, _ comp:Int) -> Double {
+        if comp > 2 {
+            let t = max(min(uv.componentAt(dirComp), 1.0), -1.0)
+            return alpha0 * (1.0 - t) + alpha1 * t
+        } else {
+            return sample(uv).componentAt(comp)
+        }
+    }
 }
 
 /////
 /* buffer coordinate
-  [0]+---+[w-1]
-     |   |
-     +---+ [w*h*N-1]
+    +---+ [w*h*N-1]
+    |   |
+ [0]+---+ [w-1]
  uv(0,0)
  */
 public class BufferTexture : Texture {
@@ -163,7 +196,7 @@ public class BufferTexture : Texture {
     }
     
     // Sample one component
-    public func sample(_ uv: Vector3, comp:Int) -> Double {
+    public func sample(_ uv: Vector3, _ comp:Int) -> Double {
         // Bilinear
         let (x0, x1, xt) = wrapU(uv.x * Double(width) - 0.5, width)
         let (y0, y1, yt) = wrapV((1.0 - uv.y) * Double(height) - 0.5, height)

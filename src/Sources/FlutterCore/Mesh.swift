@@ -19,7 +19,6 @@ public class Mesh : Geometry {
         }
     }
     
-    
     public class Triangle {
         public var vid:FaceIndice
         public var nid:FaceIndice
@@ -32,7 +31,7 @@ public class Mesh : Geometry {
         public var normal = Vector3()
         public var area = 0.0
         public var areaSampleBorder = 0.0
-        public var aabb = AABB()
+        public var bounds = AABB()
         
         
         public init(_ a:Int, _ b:Int, _ c:Int, _ matid:Int=0) {
@@ -74,7 +73,7 @@ public class Mesh : Geometry {
     
     public var faces:[Triangle] = []
     
-    public var aabb:AABB = AABB()
+    public var bounds:AABB = AABB()
     public var faceBVH = BVH()
     
     /////
@@ -104,31 +103,41 @@ public class Mesh : Geometry {
         let ret = vertices.count
         vertices.append(v)
         normals.append(n)
-        aabb.expand(v)
         return ret
     }
     
-    public func addVertex(_ v:Vector3) {
+    @discardableResult
+    public func addVertex(_ v:Vector3) -> Int {
         vertices.append(v)
+        return vertices.count - 1
     }
     
-    public func addNormal(_ v:Vector3) {
+    @discardableResult
+    public func addNormal(_ v:Vector3) -> Int {
         normals.append(v)
+        return normals.count - 1
     }
     
-    public func addTangent(_ v:Vector3) {
+    @discardableResult
+    public func addTangent(_ v:Vector3) -> Int {
         tangents.append(v)
+        return tangents.count - 1
     }
     
-    public func addTexCoord(_ v:Vector3) {
+    @discardableResult
+    public func addTexCoord(_ v:Vector3) -> Int {
         texcoords.append(v)
+        return texcoords.count - 1
     }
     
-    public func addVertexAttribute(_ i:Int, _ v:Vector3) {
+    @discardableResult
+    public func addVertexAttribute(_ i:Int, _ v:Vector3) -> Int {
         assert(i < vertexAttrs.count, "Vertex attribute out of inces")
         if i < vertexAttrs.count {
             vertexAttrs[i].append(v)
+            return vertexAttrs[i].count
         }
+        return -1
     }
     
     @discardableResult
@@ -162,6 +171,7 @@ public class Mesh : Geometry {
     public func renderPreprocess(_ rng:Random) {
         // Face preprocess
         faceBVH.clear()
+        bounds.clear()
         var totalArea = 0.0
         for i in 0..<faces.count {
             let tri = faces[i]
@@ -177,15 +187,17 @@ public class Mesh : Geometry {
             tri.normal = n / nl
             tri.area = nl
             tri.areaSampleBorder = totalArea + tri.area
-            tri.aabb.clear()
-            tri.aabb.expand(p0)
-            tri.aabb.expand(p1)
-            tri.aabb.expand(p2)
+            tri.bounds.clear()
+            tri.bounds.expand(p0)
+            tri.bounds.expand(p1)
+            tri.bounds.expand(p2)
+            
+            bounds.expand(tri.bounds)
             
             totalArea += tri.area
             
             // Add face to BVH
-            faceBVH.appendLeaf(tri.aabb, i)
+            faceBVH.appendLeaf(tri.bounds, i)
         }
         
         // Build BVH

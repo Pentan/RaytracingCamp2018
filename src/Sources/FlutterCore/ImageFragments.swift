@@ -5,6 +5,12 @@ import Glibc
 #endif
 
 public class ImageFragments {
+    public enum State {
+        case kStandBy
+        case kProcessing
+        case kDone
+    }
+    
     public struct Index2D {
         public var x:Int
         public var y:Int
@@ -16,9 +22,11 @@ public class ImageFragments {
     }
     
     public var pixelIndices:[Index2D]
+    public var state:State
     
     public init() {
         pixelIndices = Array<Index2D>()
+        state = .kStandBy
     }
     
     public init(startX:Int, startY:Int, tileWidth:Int, tileHeight:Int, imageWidth:Int, imageHeight:Int) {
@@ -38,6 +46,7 @@ public class ImageFragments {
                 pixelIndices.append(Index2D(x, y))
             }
         }
+        state = .kStandBy
     }
     
     static public func makeTileArray(_ w:Int, _ h:Int, _ tileW:Int, _ tileH:Int) -> [ImageFragments] {

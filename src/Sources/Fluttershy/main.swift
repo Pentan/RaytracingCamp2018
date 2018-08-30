@@ -8,79 +8,20 @@ import Dispatch
 import LinearAlgebra
 import FlutterCore
 
-print("=== Fluttershy ===")
-
+// Utility
 public func getTimeInSeconds() -> Double {
     let timeval = UnsafeMutablePointer<timeval>.allocate(capacity: 1)
     gettimeofday(timeval, nil)
     return Double(timeval.pointee.tv_sec) + Double(timeval.pointee.tv_usec) * 1e-6
 }
 
+// Main Routine
+print("=== Fluttershy ===")
+let startTime = getTimeInSeconds()
+
 // Render settings
-class RenderConfig {
-    public var width    = 320
-    public var height   = 240
-    public var aspect:Double {
-        return Double(width) / Double(height)
-    }
-    
-    public var pixelSubSamples  = 1
-    public var samplesPerPixel   = 32
-    
-    public var minDepth = 1
-    public var maxDepth = 4
-    public var minRRCutOff = 0.005
-    
-    public var tileSize = 64
-    
-    public var outputImage = "output.ppm"
-    
-    public func parseCommandlineOptions() {
-        var i = 1
-        while i < CommandLine.argc {
-            let arg:String = CommandLine.arguments[i]
-            
-            if arg == "-s" {
-                let s = CommandLine.arguments[i + 1].split(separator: ":")
-                width = Int(s[0])!
-                height = Int(s[1])!
-                i += 1
-            } else if arg == "-ss" {
-                pixelSubSamples = Int(CommandLine.arguments[i + 1])!
-                i += 1
-            } else if arg == "-spp" {
-                samplesPerPixel = Int(CommandLine.arguments[i + 1])!
-                i += 1
-            } else if arg == "-mind" {
-                minDepth = Int(CommandLine.arguments[i + 1])!
-                i += 1
-            } else if arg == "-maxd" {
-                maxDepth = Int(CommandLine.arguments[i + 1])!
-                i += 1
-            } else if arg == "-ts" {
-                tileSize = Int(CommandLine.arguments[i + 1])!
-                i += 1
-            } else if arg == "-o" {
-                outputImage = CommandLine.arguments[i + 1]
-                i += 1
-            }
-            
-            i += 1
-        }
-    }
-    
-    public func printCommandlineOptionInfo() {
-        print("options:")
-        print(" -s w:h : render size")
-        print(" -ss N : sub samples")
-        print(" -spp N : samples per (sub)pixel")
-        print(" -mind N : min depth")
-        print(" -maxd N : max depth")
-        print(" -ts N : tile size")
-        print(" -o String : output file name. If given empty string, not save file.")
-    }
-}
 var rndrconf = RenderConfig()
+rndrconf.loadOptionFile("data/options.json")
 
 // Parse command line options
 if CommandLine.argc > 1 {
@@ -105,28 +46,77 @@ print("Total samples per pixel:\(rndrconf.pixelSubSamples * rndrconf.pixelSubSam
 print("Trace depth min:\(rndrconf.minDepth) max:\(rndrconf.maxDepth)(Max is not work now)")
 
 // Setup scene
-let scene = Scene()
-// scene load ...
+//+++++
+//let scene = Scene()
+////BuildCornelBoxScene(scene)
+////BuildMeshCornelBoxScene(scene)
+////BuildTestScene01(scene)
+//BuildTestScene02(scene)
+//+++++
 
-//+++++
-//BuildCornelBoxScene(scene)
-BuildMeshCornelBoxScene(scene)
-//BuildTestScene01(scene)
-//+++++
+// scene load ...
+//let sceneFilePath = "/Users/satoru/Documents/_Working/GitRepos/RaytracingCamp2018/local_datas/Model/Blender/export/test02.gltf"
+//guard let scene = SceneBuilder.sceneFromGLTF(sceneFilePath) else {
+//    print("Scene load failure")
+//    exit(0)
+//}
+
+let scene:Scene
+if rndrconf.inputFile.isEmpty {
+    print("No input file. render default scene.")
+    scene = Scene()
+    BuildMeshCornelBoxScene(scene)
+    
+} else {
+    guard let scn = SceneBuilder.sceneFromGLTF(rndrconf.inputFile) else {
+        print("Scene load failure")
+        exit(0)
+    }
+    scene = scn
+}
 
 // Preprocess
 scene.renderPreprocess(Random(seed:UInt64(time(nil))))
 
 // override camera settings
-scene.camera.resizeSensorWithAspectRatio(rndrconf.aspect)
-print("camera sensor size:(\(scene.camera.sensorWidth), \(scene.camera.sensorHeight))")
-print("camera focul length:\(scene.camera.foculLength)")
+if abs(rndrconf.aspect - scene.camera.sensorAspectRatio) > 1e-6 {
+    print("!WARNING! Aspect ratio is different.")
+    print(" camera:\(scene.camera.sensorAspectRatio)")
+    print(" config:\(rndrconf.aspect)")
+    print("camera aspect ratio changed.")
+    
+    scene.camera.resizeSensorWithAspectRatio(rndrconf.aspect)
+    print("camera sensor size:(\(scene.camera.sensorWidth), \(scene.camera.sensorHeight))")
+    print("camera focul length:\(scene.camera.foculLength)")
+}
 
 //
-var imageBuffer = Array<Pixel>()
-imageBuffer.reserveCapacity(rndrconf.width * rndrconf.height)
-for _ in 0..<(rndrconf.width * rndrconf.height) {
-    imageBuffer.append(Pixel())
+func makePixelArray(_ len:Int) -> [Pixel] {
+    var ary = Array<Pixel>()
+    ary.reserveCapacity(len)
+    for _ in 0..<len {
+        ary.append(Pixel())
+    }
+    return ary
+}
+let imageBuffer = makePixelArray(rndrconf.width * rndrconf.height)
+
+//
+func saveImage(_ path:String) {
+    var snapshot = Array<Vector3>()
+    snapshot.reserveCapacity(rndrconf.width * rndrconf.height)
+    
+    for y in (0..<rndrconf.height).reversed() {
+        for x in (0..<rndrconf.width).reversed() {
+            let i = x + y * rndrconf.width
+            let (r, g, b) = imageBuffer[i].rgb()
+            snapshot.append(Vector3(r, g, b))
+        }
+    }
+    
+    let w = Int32(rndrconf.width)
+    let h = Int32(rndrconf.height)
+    ImageWriter.writeBMP(filepath: path, width: w, height: h, data: snapshot, gamma: 2.2)
 }
 
 //
@@ -136,74 +126,149 @@ render.minRRCutOff = rndrconf.minRRCutOff
 
 // Image buckets array
 let imageTiles = ImageFragments.makeTileArray(rndrconf.width, rndrconf.height, rndrconf.tileSize, rndrconf.tileSize)
-print("tiles:\(imageTiles.count)")
+print("Tiles:\(imageTiles.count)")
 
 // Render
-let startTime = getTimeInSeconds()
+print("Setup done: \(getTimeInSeconds() - startTime) [sec]")
 print("Start rendering")
 
 let dq = DispatchQueue.global()
 let dg = DispatchGroup()
 
-dq.async(group: dg) {
+var progTimer:DispatchSourceTimer?
+if !rndrconf.quietProgress {
+    progTimer = DispatchSource.makeTimerSource()
     
-    let seedBase = UInt64(time(nil))
+    let interval = rndrconf.progressInterval
+    let microleeway = DispatchTimeInterval.microseconds(Int(1000000.0))
+    let deadline = DispatchTime.now() + interval
     
-    DispatchQueue.concurrentPerform(iterations: imageTiles.count) { (itile) in
-    //for itile in 0..<tiles.count {
-        let tile = imageTiles[itile]
-        let rng = Random(seed:seedBase + UInt64(itile))
-        var maxDepth = 0
-        var minDepth = Int.max
-        var avrDepth = 0
-        var avrCount = 0
+    progTimer?.schedule(deadline: deadline, repeating: interval, leeway: microleeway)
+    
+    var outputCount = 0
+    progTimer?.setEventHandler(handler: DispatchWorkItem(block: {
+        let cntstr = String(outputCount)
+        var namebase = "00000"
+        namebase.removeLast(cntstr.count)
+        let outname = "\(namebase)\(cntstr).bmp"
+        
+        print("save progress image \(outname)")
+        saveImage(outname)
+        outputCount += 1
+    }))
+    progTimer?.resume()
+}
 
-        for ipi in 0..<tile.pixelIndices.count {
-            let findx = tile.pixelIndices[ipi]
-            let pixel = imageBuffer[findx.x + findx.y * rndrconf.width]
-            let px = Double(findx.x)
-            let py = Double(findx.y)
+var vorbTimer = DispatchSource.makeTimerSource()
+vorbTimer.schedule(deadline: DispatchTime.now() + 1.0, repeating: 1.0)
+vorbTimer.setEventHandler {
+    let total = imageTiles.count
+    var standby = 0
+    var processing = 0
+    var done = 0
+    for i in 0..<total {
+        let tile = imageTiles[i]
+        switch tile.state {
+        case .kStandBy:
+            standby += 1
+        case .kProcessing:
+            processing += 1
+        case .kDone:
+            done += 1
+        }
+    }
+    print("\rstandby:\(standby),processing:\(processing),done:\(done)/\(total)     ", terminator:"")
+    fflush(stdout)
+}
+vorbTimer.resume()
+
+let timeoutTime = DispatchWallTime.now() + rndrconf.timeLimit
+var pastTime:Double = 0.0
+repeat {
+    dq.async(group: dg) {
+        
+        let seedBase = UInt64(time(nil))
+        
+        DispatchQueue.concurrentPerform(iterations: imageTiles.count) { (itile) in
+//        for itile in 0..<imageTiles.count {
+            let tile = imageTiles[itile]
+            tile.state = .kProcessing
             
-            for suby in 0..<rndrconf.pixelSubSamples {
-                for subx in 0..<rndrconf.pixelSubSamples {
-                    for _ in 0..<rndrconf.samplesPerPixel {
-                        let sx = px + (Double(subx) + rng.nextDoubleCO()) / Double(rndrconf.pixelSubSamples)
-                        let sy = py + (Double(suby) + rng.nextDoubleCO()) / Double(rndrconf.pixelSubSamples)
-                        
-                        // ([0,w),[0,h)) -> ([-1,1),[-1,1))
-                        let nx = sx / Double(rndrconf.width) * 2.0 - 1.0
-                        let ny = sy / Double(rndrconf.height) * 2.0 - 1.0
-                        
-                        let (radiance, depth) = render.pathtrace(nx, ny, scene, rng)
-                        
-                        // Depth info
-                        if depth > 0 {
-                            maxDepth = max(maxDepth, depth)
-                            minDepth = min(minDepth, depth)
-                            avrDepth += depth
-                            avrCount += 1
+            let rng = Random(seed:seedBase + UInt64(itile))
+            var maxDepth = 0
+            var minDepth = Int.max
+            var avrDepth = 0
+            var avrCount = 0
+
+            for ipi in 0..<tile.pixelIndices.count {
+                let findx = tile.pixelIndices[ipi]
+                let pixel = imageBuffer[findx.x + findx.y * rndrconf.width]
+                let px = Double(findx.x)
+                let py = Double(findx.y)
+                
+                for suby in 0..<rndrconf.pixelSubSamples {
+                    for subx in 0..<rndrconf.pixelSubSamples {
+                        for _ in 0..<rndrconf.samplesPerPixel {
+                            let sx = px + (Double(subx) + rng.nextDoubleCO()) / Double(rndrconf.pixelSubSamples)
+                            let sy = py + (Double(suby) + rng.nextDoubleCO()) / Double(rndrconf.pixelSubSamples)
+                            
+                            // ([0,w),[0,h)) -> ([-1,1),[-1,1))
+                            let nx = sx / Double(rndrconf.width) * 2.0 - 1.0
+                            let ny = sy / Double(rndrconf.height) * 2.0 - 1.0
+                            
+                            let (radiance, depth) = render.pathtrace(nx, ny, scene, rng)
+                            
+                            // Depth info
+                            if depth > 0 {
+                                maxDepth = max(maxDepth, depth)
+                                minDepth = min(minDepth, depth)
+                                avrDepth += depth
+                                avrCount += 1
+                            }
+                            
+                            // Accumulate
+                            pixel.accumulate(radiance)
                         }
-                        
-                        // Accumulate
-                        pixel.accumulate(radiance)
                     }
                 }
             }
+            tile.state = .kDone
+            
+            //+++++
+//            var msg = "tile \(itile) done."
+//            msg += " fragments:\(tile.pixelIndices.count)"
+//            if avrCount > 0 {
+//                msg += " depth:{min:\(minDepth), max:\(maxDepth), average:\(Double(avrDepth)/Double(avrCount))}"
+//            } else {
+//                msg += " no valid depth."
+//            }
+//            print(msg)
+            //+++++
         }
-        
-        var msg = "tile \(itile) done."
-        msg += " fragments:\(tile.pixelIndices.count)"
-        if avrCount > 0 {
-            msg += " depth:{min:\(minDepth), max:\(maxDepth), average:\(Double(avrDepth)/Double(avrCount))}"
-        } else {
-            msg += " no valid depth."
-        }
-        print(msg)
     }
-}
 
-print("wait to finish...")
-dg.wait()
+    if rndrconf.waitToFinish {
+        print("wait to finish...")
+        dg.wait()
+        pastTime = rndrconf.timeLimit
+        
+    } else {
+        print("remain \(rndrconf.timeLimit - pastTime) seconds...")
+        let waitResult = dg.wait(wallTimeout: timeoutTime)
+        if waitResult == .success {
+//            print("time remaining? rewind.")
+            for i in 0..<imageTiles.count {
+                imageTiles[i].state = .kStandBy
+            }
+        }
+        pastTime = getTimeInSeconds() - startTime
+    }
+} while(pastTime < rndrconf.timeLimit)
+
+if let tmr = progTimer {
+    tmr.cancel()
+}
+vorbTimer.cancel()
 
 print("finish render")
 let endTime = getTimeInSeconds()
@@ -211,31 +276,6 @@ print("render time:\(endTime - startTime)[sec]")
 
 // Output
 if rndrconf.outputImage.count > 0 {
-    print("save image")
-    let f = fopen(rndrconf.outputImage, "wb")
-    fputs("P3\n", f)
-    fputs("\(rndrconf.width) \(rndrconf.height)\n", f)
-    fputs("255\n", f)
-    
-    func tosRGB8(_ c:Double) -> Int {
-        let kGamma = 2.2
-        if c < 0.0 {
-            print("! negative radiance:\(c)")
-            return 0
-        }
-        let gc = pow(c, 1.0 / kGamma)
-        return Int(max(min(gc * 255.0, 255.0), 0.0))
-    }
-    
-    // rendered image is 180 degree rotated
-    for y in 0..<rndrconf.height {
-        //let h = (kHeight - y - 1) * kWidth
-        for x in 0..<rndrconf.width {
-            //let i = x + h
-            let i = (rndrconf.width - x - 1) + y * rndrconf.width
-            let (r, g, b) = imageBuffer[i].rgb()
-            fputs("\(tosRGB8(r)) \(tosRGB8(g)) \(tosRGB8(b))\n", f)
-        }
-    }
-    fclose(f)
+    print("save final image: \(rndrconf.outputImage)")
+    saveImage(rndrconf.outputImage)
 }

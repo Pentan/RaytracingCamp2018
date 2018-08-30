@@ -11,9 +11,10 @@ import FlutterCore
 public func BuildCornelBoxScene(_ scene:Scene) {
     print("Build simple cornel box scene")
     let camera = scene.camera
-    camera.position = Vector3(50.0, 52.0, 295.6)
+    let eyepos = Vector3(50.0, 52.0, 295.6)
     camera.lookAt(
-        look:camera.position + Vector3(0.0, -0.042612, -1.0),
+        eye:eyepos,
+        look:eyepos + Vector3(0.0, -0.042612, -1.0),
         up:Vector3(0.0, 1.0, 0.0)
     )
     camera.setFoculLengthWithFOV(30.0 * Double.pi / 180.0)
@@ -34,9 +35,10 @@ public func BuildCornelBoxScene(_ scene:Scene) {
 public func BuildMeshCornelBoxScene(_ scene:Scene) {
     print("Build mesh cornel box scene")
     let camera = scene.camera
-    camera.position = Vector3(50.0, 52.0, 295.6)
+    let eyepos = Vector3(50.0, 52.0, 295.6)
     camera.lookAt(
-        look:camera.position + Vector3(0.0, -0.042612, -1.0),
+        eye:eyepos,
+        look:eyepos + Vector3(0.0, -0.042612, -1.0),
         up:Vector3(0.0, 1.0, 0.0)
     )
     camera.setFoculLengthWithFOV(30.0 * Double.pi / 180.0)
@@ -128,8 +130,9 @@ public func BuildMeshCornelBoxScene(_ scene:Scene) {
 // Test scene
 public func BuildTestScene01(_ scene:Scene) {
     let camera = scene.camera
-    camera.position = Vector3(2.0, 1.0, 4.0)
+    let eyepos = Vector3(2.0, 1.0, 4.0)
     camera.lookAt(
+        eye:eyepos,
         look:Vector3(0.0, 0.0, 0.0),
         up:Vector3(0.0, 1.0, 0.0)
     )
@@ -159,4 +162,30 @@ public func BuildTestScene01(_ scene:Scene) {
             LegacyMaterial(Vector3(0.25, 0.25, 0.5), Vector3(0.0, 0.0, 0.0), .kLambert)
         )
     )
+}
+
+public func BuildTestScene02(_ scene:Scene) {
+    let camera = scene.camera
+    let eyepos = Vector3(0.0, 1.0, 4.0)
+    camera.lookAt(
+        eye:eyepos,
+        look:Vector3(0.0, 0.0, 0.0),
+        up:Vector3(0.0, 1.0, 0.0)
+    )
+    camera.setFoculLengthWithFOV(30.0 * Double.pi / 180.0)
+    
+    scene.background.texture = LinearGradient(
+        Vector3(0.04, 0.02, 0.02),
+        Vector3(0.5, 0.5, 0.8),
+        direction:.kY
+    )
+    
+    for i in 0..<10 {
+        scene.addObject(
+            ObjectNode(
+                Cube(Vector3(0.0, 0.0, -Double(i)), Vector3(0.8, 0.8, 0.8)),
+                LegacyMaterial(Vector3(0.75, 0.75, 0.75), Vector3(0.0, 0.0, 0.0), .kLambert)
+            )
+        )
+    }
 }

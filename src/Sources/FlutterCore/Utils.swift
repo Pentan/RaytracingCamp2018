@@ -63,3 +63,42 @@ public func refract(_ wi:Vector3, _ n:Vector3, _ ior:Double) -> (Bool, Vector3, 
     let wr = (eta * abs(idotn) - cos2t.squareRoot()) * absn - eta * wi
     return (true, wr, eta * eta)
 }
+
+// correct  incorrect
+// vi<-|    vi<-|
+//   <-|ng    <-|ng
+// vo<-|        |->vo
+public func IsCorrectReflection(_ vi:Vector3, _ vo:Vector3, _ gn:Vector3) -> Bool {
+    return Vector3.dot(vi, gn) * Vector3.dot(vo, gn) > 0.0
+}
+
+/////
+public enum FileLoadUtilError : Error {
+    case FileLoadFailure
+}
+// Must call ptr.deallocatr() after used.
+public func LoadAllBytes(_ path:String) throws -> (UnsafeMutableRawPointer, Int) {
+    let fd = open(path, O_RDONLY)
+    let fp = fdopen(fd, "rb")
+    
+    if fp == nil {
+        throw FileLoadUtilError.FileLoadFailure
+    }
+    
+    let stat = UnsafeMutablePointer<stat>.allocate(capacity: 1)
+    fstat(fd, stat)
+    
+    let fsize = Int(stat[0].st_size)
+    stat.deallocate()
+    
+    let buf = UnsafeMutableRawPointer.allocate(byteCount: fsize, alignment: MemoryLayout<UInt8>.alignment)
+    let readed = fread(buf, 1, fsize, fp)
+    fclose(fp)
+    
+    if readed < fsize {
+        buf.deallocate()
+        throw FileLoadUtilError.FileLoadFailure
+    }
+    
+    return (buf, fsize)
+}

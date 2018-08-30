@@ -21,6 +21,9 @@ public class Scene {
     
     public func addObject(_ obj:ObjectNode) {
         objectNodes.append(obj)
+        if obj.isLight {
+            lightNodes.append(obj)
+        }
     }
     
     public func renderPreprocess(_ rng:Random) {
@@ -54,10 +57,12 @@ public class Scene {
         // Blute force
 //        var min_hit = Hit(false, far)
 //        for i in 0..<objectNodes.count {
-//            let hit = objectNodes[i].intersection(ray, near, min_hit.distance)
-//            if hit.isHit {
-//                min_hit = hit
+//            let (ishit, dist, primid) = objectNodes[i].intersection(ray, near, min_hit.distance)
+//            if ishit {
+//                min_hit.isHit = true
+//                min_hit.distance = dist
 //                min_hit.objectIndex = i
+//                min_hit.primitiveIndex = primid
 //            }
 //        }
 //

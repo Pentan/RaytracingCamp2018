@@ -19,7 +19,7 @@ final class MeshTests: XCTestCase {
         let ray = Ray(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, -1.0))
         var ishit:Bool
         
-        ishit = tri.aabb.isIntersect(ray, 0.0, 1e10)
+        ishit = tri.bounds.isIntersect(ray, 0.0, 1e10)
         XCTAssertTrue(ishit, "Triangle bounds test failed")
         
         (ishit, _, _, _) = tri.intersection(ray, 0.0, 1e10)
