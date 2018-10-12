@@ -8,3 +8,7 @@ Features
 
 - glTF scene file (partial support)
 - Written in Swift
+
+Dependency
+
+- [stb_image, stb_image_write](https://github.com/nothings/stb/)
