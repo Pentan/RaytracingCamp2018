@@ -46,6 +46,15 @@ public class SimpleMaterial : Material {
         }
     }
     
+    public func setEmissionTexture(_ tex:Texture) {
+        textures[SimpleMaterial.kEmissionTexture] = tex
+    }
+    
+    public func setColorTexture(_ tex:Texture) {
+        textures[SimpleMaterial.kColorTexture] = tex
+    }
+    
+    //
     public func emittion(_ pv:PathVertex) -> Vector3 {
         let tex = textures[SimpleMaterial.kEmissionTexture]
         let uv = pv.surface.uv

@@ -189,3 +189,60 @@ public func BuildTestScene02(_ scene:Scene) {
         )
     }
 }
+
+// ImageTexture test
+public func BuildTestScene03(_ scene:Scene) {
+    let camera = scene.camera
+    let eyepos = Vector3(0.0, 0.0, 2.0)
+    camera.lookAt(
+        eye:eyepos,
+        look:Vector3(0.0, 0.0, 0.0),
+        up:Vector3(0.0, 1.0, 0.0)
+    )
+    camera.setFoculLengthWithFOV(90.0 * Double.pi / 180.0)
+    
+    do {
+        let bgtex = try ImageTexture(filepath: "data/uffizi-large.hdr")
+        scene.background.texture = bgtex
+    } catch {
+        print("Background image load failed. use default color.")
+        scene.background.texture = LinearGradient(
+            Vector3(0.04, 0.02, 0.02),
+            Vector3(0.5, 0.5, 0.8),
+            direction:.kY
+        )
+    }
+//    scene.background.texture = ConstantColor(Vector3(1.0, 1.0, 1.0))
+    
+    let geom = Mesh(4, 1, 0)
+    
+    geom.addVertex(Vector3(-1.0, -1.0, 0.0))
+    geom.addVertex(Vector3( 1.0, -1.0, 0.0))
+    geom.addVertex(Vector3( 1.0,  1.0, 0.0))
+    geom.addVertex(Vector3(-1.0,  1.0, 0.0))
+    
+    geom.addNormal(Vector3(0.0, 0.0, 1.0))
+    geom.addNormal(Vector3(0.0, 0.0, 1.0))
+    geom.addNormal(Vector3(0.0, 0.0, 1.0))
+    geom.addNormal(Vector3(0.0, 0.0, 1.0))
+    
+    geom.addTexCoord(Vector3(0.0, 0.0, 0.0))
+    geom.addTexCoord(Vector3(1.0, 0.0, 0.0))
+    geom.addTexCoord(Vector3(1.0, 1.0, 0.0))
+    geom.addTexCoord(Vector3(0.0, 1.0, 0.0))
+    
+    geom.addFace(0, 1, 2)
+    geom.addFace(2, 3, 0)
+    
+    let mat = SimpleMaterial(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0), .kLambert)
+    
+    do {
+        let tex = try ImageTexture(filepath: "data/ColorGrid24.png")
+        //mat.setColorTexture(tex)
+        mat.setEmissionTexture(tex)
+    } catch {
+        print("ImageTexure load error")
+    }
+    
+    scene.addObject(ObjectNode(geom, mat))
+}

@@ -177,7 +177,7 @@ public class BufferTexture : Texture {
     public func sample(_ uv: Vector3) -> Vector3 {
         // Bilinear
         let (x0, x1, xt) = wrapU(uv.x * Double(width) - 0.5, width)
-        let (y0, y1, yt) = wrapV((1.0 - uv.y) * Double(height) - 0.5, height)
+        let (y0, y1, yt) = wrapV(uv.y * Double(height) - 0.5, height)
         
         let i00 = (x0 + y0 * width) * stride
         let i01 = (x0 + y1 * width) * stride
@@ -199,7 +199,7 @@ public class BufferTexture : Texture {
     public func sample(_ uv: Vector3, _ comp:Int) -> Double {
         // Bilinear
         let (x0, x1, xt) = wrapU(uv.x * Double(width) - 0.5, width)
-        let (y0, y1, yt) = wrapV((1.0 - uv.y) * Double(height) - 0.5, height)
+        let (y0, y1, yt) = wrapV(uv.y * Double(height) - 0.5, height)
         
         let i00 = (x0 + y0 * width) * stride
         let i01 = (x0 + y1 * width) * stride
@@ -217,3 +217,11 @@ public class BufferTexture : Texture {
         return cy0 * (1.0 - yt) + cy1 * yt
     }
 }
+
+// Image Texture. For STBImageTexture class details see Texture+.swift
+public enum ImageTextureError : Error {
+    case loadFailed
+}
+
+public typealias ImageTexture = STBImageTexture
+

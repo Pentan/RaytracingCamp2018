@@ -61,11 +61,12 @@ print("Trace depth min:\(rndrconf.minDepth) max:\(rndrconf.maxDepth)(Max is not 
 // Setup scene
 //+++++
 //let scene = Scene()
-////BuildCornelBoxScene(scene)
-////BuildMeshCornelBoxScene(scene)
-////BuildTestScene01(scene)
+//BuildCornelBoxScene(scene)
+//BuildMeshCornelBoxScene(scene)
+//BuildTestScene01(scene)
 //BuildTestScene02(scene)
-//+++++
+//BuildTestScene03(scene)
+//rndrconf.waitToFinish = true
 
 // scene load ...
 //let sceneFilePath = "test02.gltf"
@@ -75,6 +76,7 @@ print("Trace depth min:\(rndrconf.minDepth) max:\(rndrconf.maxDepth)(Max is not 
 //    exit(0)
 //}
 //rndrconf.waitToFinish = true
+//+++++
 
 let scene:Scene
 if rndrconf.inputFile.isEmpty {

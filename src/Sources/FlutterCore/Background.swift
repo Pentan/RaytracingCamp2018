@@ -22,9 +22,10 @@ public class Background {
     
     public func sample(_ ray:Ray) -> Vector3 {
         let dir = Vector3.normalized(Matrix4.mulV3(transform, ray.direction))
+        let t = atan2(-dir.x, -dir.z) / (Double.pi * 2.0)
         let uv = Vector3(
-            (atan2(dir.x, -dir.z) / Double.pi + 1.0) * 0.5,
-            acos(max(min(dir.z, 1.0), -1.0)) / Double.pi * 0.5,
+            (t >= 0.0) ? t : (1.0 + t),
+            acos(max(min(-dir.y, 1.0), -1.0)) / Double.pi,
             0.0
         )
         return texture.sample(uv)

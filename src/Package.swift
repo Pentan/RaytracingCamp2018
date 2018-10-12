@@ -9,6 +9,7 @@ let package = Package(
         .executable(name: "Fluttershy", targets: ["Fluttershy"]),
         .library(name: "FlutterCore", targets: ["FlutterCore"]),
         //.library(name: "LinearAlgebra", targets: ["LinearAlgebra"]),
+        //.library(name: "STB", targets: ["STB"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -19,16 +20,22 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Fluttershy",
-            dependencies: ["FlutterCore", "LinearAlgebra"]),
+            dependencies: ["FlutterCore", "LinearAlgebra", "STB"]),
         .target(
             name: "FlutterCore",
-            dependencies: ["LinearAlgebra"]),
+            dependencies: ["LinearAlgebra", "STB"]),
         .target(
             name: "LinearAlgebra",
+            dependencies: []),
+        .target(
+            name: "STB",
             dependencies: []),
         
         .testTarget(
             name: "FlutterCoreTests",
             dependencies: ["FlutterCore", "LinearAlgebra"]),
+        .testTarget(
+            name: "STBTests",
+            dependencies: ["STB"]),
     ]
 )
